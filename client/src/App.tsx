@@ -1,4 +1,4 @@
-import { ReactElement, useState } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 
 type CardStatus = 'hidden' | 'shown';
 
@@ -8,52 +8,52 @@ type CardData = {
   status: CardStatus;
 };
 
-const mockCards: Array<CardData> = [
-  {
-    id: 1,
-    imgUrl: 'https://cdn2.thecatapi.com/images/MjAzOTQ2MA.jpg',
-    status: 'shown',
-  },
-  {
-    id: 2,
-    imgUrl: 'https://cdn2.thecatapi.com/images/Oaoo1ky3A.jpg',
-    status: 'shown',
-  },
-  {
-    id: 3,
-    imgUrl: 'https://cdn2.thecatapi.com/images/dEWWIiCgr.jpg',
-    status: 'shown',
-  },
-  {
-    id: 5,
-    imgUrl: 'https://cdn2.thecatapi.com/images/c2f.jpg',
-    status: 'shown',
-  },
-  {
-    id: 6,
-    imgUrl: 'https://cdn2.thecatapi.com/images/MjAzOTQ2MA.jpg',
-    status: 'shown',
-  },
-  {
-    id: 7,
-    imgUrl: 'https://cdn2.thecatapi.com/images/Oaoo1ky3A.jpg',
-    status: 'shown',
-  },
-  {
-    id: 8,
-    imgUrl: 'https://cdn2.thecatapi.com/images/dEWWIiCgr.jpg',
-    status: 'shown',
-  },
-  {
-    id: 9,
-    imgUrl: 'https://cdn2.thecatapi.com/images/c2f.jpg',
-    status: 'shown',
-  },
-];
+const rows = 3;
+const cols = 2;
 
-function App() {
-  const [cards, setCards] = useState<CardData[]>(mockCards);
+interface CatResponse {
+  url: string;
+}
+
+function fetchCatUrl(): Promise<string> {
+  return fetch(`https://api.thecatapi.com/v1/images/search`)
+    .then((res) => res.json())
+    .then((data: CatResponse[]) => data[0].url);
+}
+
+function shuffle<T>(items: Array<T>) {
+  return items.sort(() => -0.5 + Math.random());
+}
+
+function twice<T>(items: Array<T>) {
+  return [...items, ...items];
+}
+
+function transformUrlToCardData(imgUrl: string, id: number): CardData {
+  return {
+    id,
+    imgUrl,
+    status: 'hidden',
+  };
+}
+
+function generateCards(cardAmount: number): Promise<CardData[]> {
+  const requestAmount = Math.round(cardAmount / 2);
+  const requests = new Array(requestAmount).fill(0).map(() => fetchCatUrl());
+
+  return Promise.all(requests)
+    .then(twice)
+    .then(shuffle)
+    .then((urls) => urls.map(transformUrlToCardData));
+}
+
+const App: React.FC = () => {
+  const [cards, setCards] = useState<CardData[]>();
   const [prevClickedCard, setPrevClickedCard] = useState<CardData | null>(null);
+
+  useEffect(() => {
+    generateCards(cols * rows).then(setCards);
+  }, []);
 
   const handleCardClick = (currClickedCard: CardData) => {
     if (prevClickedCard) {
@@ -62,7 +62,7 @@ function App() {
         prevClickedCard.imgUrl === currClickedCard.imgUrl
       ) {
         setCards(
-          cards.filter((card) => card.imgUrl !== currClickedCard.imgUrl)
+          cards!.filter((card) => card.imgUrl !== currClickedCard.imgUrl)
         );
       }
       setPrevClickedCard(null);
@@ -70,6 +70,10 @@ function App() {
       setPrevClickedCard(currClickedCard);
     }
   };
+
+  if (!cards) {
+    return 'loading..';
+  }
 
   return (
     <Board>
@@ -83,7 +87,7 @@ function App() {
       ))}
     </Board>
   );
-}
+};
 
 interface BoardProps {
   children: Array<ReactElement>;
