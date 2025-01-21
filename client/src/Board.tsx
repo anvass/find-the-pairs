@@ -13,6 +13,7 @@ interface CatResponse {
 }
 
 function fetchCatUrl(): Promise<string> {
+  // return fetch(`https://api.thecatapi.com/v1/images/search?api_key=17d94b92-754f-46eb-99a0-65be65b5d18f&limit=20`)
   return fetch(`https://api.thecatapi.com/v1/images/search`)
     .then((res) => res.json())
     .then((data: CatResponse[]) => data[0].url);
@@ -44,15 +45,19 @@ function generateCards(cardAmount: number): Promise<CardData[]> {
     .then((urls) => urls.map(transformUrlToCardData));
 }
 
+type Level = 'easy' | 'medium' | 'hard';
+
 interface BoardProps {
-  level: any;
-  onComplete: () => void;
+  level: Level;
+  onComplete: (attempts: number, timer: number) => void;
 }
 
 const Board = ({ level, onComplete }: BoardProps) => {
   const [demensions, setDemensions] = useState<[number, number]>();
   const [cards, setCards] = useState<CardData[]>();
   const [prevClickedCard, setPrevClickedCard] = useState<CardData | null>(null);
+  const [attemptsCount, setAttemptsCount] = useState<number>(1);
+  const [timer, setTimer] = useState<number>(0);
 
   useEffect(() => {
     if (level === 'easy') {
@@ -74,6 +79,16 @@ const Board = ({ level, onComplete }: BoardProps) => {
     generateCards(cols * rows).then(setCards);
   }, [demensions]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimer((prev) => prev + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
   const handleCardClick = (currClickedCard: CardData) => {
     if (prevClickedCard) {
       if (
@@ -85,12 +100,14 @@ const Board = ({ level, onComplete }: BoardProps) => {
         );
 
         if (!newCards.length) {
-          onComplete();
+          onComplete(attemptsCount, timer);
           return;
         } else {
           setCards(newCards);
         }
       }
+      // setAttemptsCount((prev) => prev + 1);
+      setAttemptsCount(attemptsCount + 1);
       setPrevClickedCard(null);
     } else {
       setPrevClickedCard(currClickedCard);
@@ -102,16 +119,18 @@ const Board = ({ level, onComplete }: BoardProps) => {
   }
 
   return (
-    <Container cols={demensions![0]} rows={demensions![1]}>
-      {cards.map((card) => (
-        <Card
-          key={card.id}
-          isSelected={card.id === prevClickedCard?.id}
-          card={card}
-          onClick={handleCardClick}
-        />
-      ))}
-    </Container>
+    <>
+      <Container cols={demensions![0]} rows={demensions![1]}>
+        {cards.map((card) => (
+          <Card
+            key={card.id}
+            isSelected={card.id === prevClickedCard?.id}
+            card={card}
+            onClick={handleCardClick}
+          />
+        ))}
+      </Container>
+    </>
   );
 };
 

@@ -21,22 +21,39 @@ function SceneStart({ onComplete }: SceneStartProps) {
 
 interface ScenePlayProps {
   level: Level;
-  onComplete: () => void;
+  onComplete: (attempts: number, timer: number) => void;
 }
 
 function ScenePlay({ level, onComplete }: ScenePlayProps) {
-  return <Board level={level} onComplete={() => onComplete()} />;
+  return (
+    <Board
+      level={level}
+      onComplete={(attempts, timer) => onComplete(attempts, timer)}
+    />
+  );
 }
 
 interface SceneFinalProps {
+  attemptsCount: number;
+  finalTime: number;
+  level: Level;
   onComplete: () => void;
 }
 
-function SceneFinal({ onComplete }: SceneFinalProps) {
+function SceneFinal({
+  attemptsCount,
+  finalTime,
+  onComplete,
+  level,
+}: SceneFinalProps) {
   return (
     <div>
       final
       <button onClick={() => onComplete()}>play again</button>
+      <div>Results:</div>
+      <p>level - {level}</p>
+      <p>time - {finalTime} second(s)</p>
+      <p>attempts count - {attemptsCount}</p>
     </div>
   );
 }
@@ -52,6 +69,9 @@ interface GamePlay {
 
 interface GameFinal {
   scene: 'final';
+  level: Level;
+  attemptsCount: number;
+  finalTime: number;
 }
 
 export type GameState = GameStart | GamePlay | GameFinal;
@@ -63,37 +83,67 @@ const App: React.FC = () => {
 
   if (gameState.scene === 'start') {
     return (
-      <SceneStart
-        onComplete={(level) => {
-          setGameState({
-            scene: 'play',
-            level,
-          });
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
-      />
+      >
+        <SceneStart
+          onComplete={(level) => {
+            setGameState({
+              scene: 'play',
+              level,
+            });
+          }}
+        />
+      </div>
     );
   }
   if (gameState.scene === 'play') {
     return (
-      <ScenePlay
-        level={gameState.level}
-        onComplete={() => {
-          setGameState({
-            scene: 'final',
-          });
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
-      />
+      >
+        <ScenePlay
+          level={gameState.level}
+          onComplete={(attemptsCount, finalTime) => {
+            setGameState({
+              scene: 'final',
+              attemptsCount,
+              finalTime,
+              level: gameState.level,
+            });
+          }}
+        />
+      </div>
     );
   }
   if (gameState.scene === 'final') {
     return (
-      <SceneFinal
-        onComplete={() => {
-          setGameState({
-            scene: 'start',
-          });
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
-      />
+      >
+        <SceneFinal
+          attemptsCount={gameState.attemptsCount}
+          finalTime={gameState.finalTime}
+          level={gameState.level}
+          onComplete={() => {
+            setGameState({
+              scene: 'start',
+            });
+          }}
+        />
+      </div>
     );
   }
 };
