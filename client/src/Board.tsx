@@ -1,4 +1,4 @@
-import { Flex, Spin, Statistic } from 'antd';
+import { Flex, Grid, Spin } from 'antd';
 import { ReactElement, useEffect, useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 
@@ -63,13 +63,13 @@ const Board = ({ level, onComplete }: BoardProps) => {
 
   useEffect(() => {
     if (level === 'easy') {
-      setDemensions([3, 4]);
+      setDemensions([4, 3]);
     }
     if (level === 'medium') {
       setDemensions([6, 4]);
     }
     if (level === 'hard') {
-      setDemensions([6, 7]);
+      setDemensions([6, 6]);
     }
   }, [level]);
 
@@ -151,14 +151,19 @@ interface ContainerProps {
   rows: number;
 }
 
+const { useBreakpoint } = Grid;
+
 function Container({ children, cols, rows }: ContainerProps) {
+  const { sm } = useBreakpoint();
+
   return (
     <div
       style={{
         display: 'inline-grid',
         gap: '10px',
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gridTemplateRows: `repeat(${rows}, 1fr)`,
+        gridTemplateColumns: sm ? `repeat(${cols}, 1fr)` : `repeat(2, 1fr)`,
+        // gridTemplateRows: `repeat(${rows}, 1fr)`,
+        width: '100%',
       }}
     >
       {children}
@@ -181,8 +186,10 @@ function Card({ card, onClick, isSelected }: CardProps) {
         outlineColor: isSelected ? 'blue' : 'transparent',
         outlineStyle: 'solid',
         outlineWidth: isSelected ? 3 : 0,
-        width: 200,
-        height: 200,
+        width: '100%',
+        // maxWidth: 200,
+        height: 0,
+        paddingBottom: '100%',
         backgroundImage: `url(${card.imgUrl})`,
         backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',

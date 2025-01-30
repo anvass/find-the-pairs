@@ -130,8 +130,9 @@ function ScenePlay({ level, onComplete }: ScenePlayProps) {
       style={{
         minHeight: '100vh',
         width: '95%',
-        maxWidth: '900px',
+        maxWidth: '1000px',
         padding: '30px 15px',
+        boxSizing: 'border-box',
         textAlign: 'center',
       }}
     >
