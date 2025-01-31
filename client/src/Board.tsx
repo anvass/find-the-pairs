@@ -1,4 +1,6 @@
+import { Flex, Grid, Spin } from 'antd';
 import { ReactElement, useEffect, useState } from 'react';
+import { LoadingOutlined } from '@ant-design/icons';
 
 type CardStatus = 'hidden' | 'shown';
 
@@ -12,11 +14,12 @@ interface CatResponse {
   url: string;
 }
 
-function fetchCatUrl(): Promise<string> {
-  // return fetch(`https://api.thecatapi.com/v1/images/search?api_key=17d94b92-754f-46eb-99a0-65be65b5d18f&limit=20`)
-  return fetch(`https://api.thecatapi.com/v1/images/search`)
+function fetchCatUrls(limit: number): Promise<string[]> {
+  return fetch(
+    `https://api.thecatapi.com/v1/images/search?api_key=17d94b92-754f-46eb-99a0-65be65b5d18f&limit=${limit}`
+  )
     .then((res) => res.json())
-    .then((data: CatResponse[]) => data[0].url);
+    .then((items: CatResponse[]) => items.map((item) => item.url));
 }
 
 function shuffle<T>(items: Array<T>) {
@@ -36,10 +39,9 @@ function transformUrlToCardData(imgUrl: string, id: number): CardData {
 }
 
 function generateCards(cardAmount: number): Promise<CardData[]> {
-  const requestAmount = Math.round(cardAmount / 2);
-  const requests = new Array(requestAmount).fill(0).map(() => fetchCatUrl());
+  const catsAmount = Math.round(cardAmount / 2);
 
-  return Promise.all(requests)
+  return fetchCatUrls(catsAmount)
     .then(twice)
     .then(shuffle)
     .then((urls) => urls.map(transformUrlToCardData));
@@ -61,13 +63,13 @@ const Board = ({ level, onComplete }: BoardProps) => {
 
   useEffect(() => {
     if (level === 'easy') {
-      setDemensions([2, 2]);
+      setDemensions([4, 3]);
     }
     if (level === 'medium') {
-      setDemensions([2, 3]);
+      setDemensions([6, 4]);
     }
     if (level === 'hard') {
-      setDemensions([3, 4]);
+      setDemensions([6, 6]);
     }
   }, [level]);
 
@@ -115,7 +117,16 @@ const Board = ({ level, onComplete }: BoardProps) => {
   };
 
   if (!cards) {
-    return 'loading..';
+    return (
+      <Flex justify="center" align="center">
+        <Spin
+          fullscreen={true}
+          indicator={
+            <LoadingOutlined style={{ fontSize: 80, color: '#ffffff' }} spin />
+          }
+        ></Spin>
+      </Flex>
+    );
   }
 
   return (
@@ -140,14 +151,19 @@ interface ContainerProps {
   rows: number;
 }
 
+const { useBreakpoint } = Grid;
+
 function Container({ children, cols, rows }: ContainerProps) {
+  const { sm } = useBreakpoint();
+
   return (
     <div
       style={{
         display: 'inline-grid',
         gap: '10px',
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gridTemplateRows: `repeat(${rows}, 1fr)`,
+        gridTemplateColumns: sm ? `repeat(${cols}, 1fr)` : `repeat(2, 1fr)`,
+        // gridTemplateRows: `repeat(${rows}, 1fr)`,
+        width: '100%',
       }}
     >
       {children}
@@ -166,15 +182,21 @@ function Card({ card, onClick, isSelected }: CardProps) {
     <div
       onClick={() => onClick(card)}
       style={{
-        borderStyle: 'solid',
-        borderColor: isSelected ? 'blue' : ' black',
-        borderWidth: 5,
-        width: 150,
-        height: 150,
+        borderRadius: '8px',
+        outlineColor: isSelected ? 'blue' : 'transparent',
+        outlineStyle: 'solid',
+        outlineWidth: isSelected ? 3 : 0,
+        width: '100%',
+        // maxWidth: 200,
+        height: 0,
+        paddingBottom: '100%',
         backgroundImage: `url(${card.imgUrl})`,
+        backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center center',
+        boxSizing: 'border-box',
       }}
+      className="card"
     />
   );
 }
