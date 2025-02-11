@@ -2,7 +2,7 @@ import { Flex, Grid, Spin } from 'antd';
 import { ReactElement, useEffect, useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 
-type CardStatus = 'hidden' | 'shown';
+type CardStatus = 'hidden' | 'shown' | 'guessed';
 
 type CardData = {
   id: number;
@@ -57,9 +57,59 @@ interface BoardProps {
 const Board = ({ level, onComplete }: BoardProps) => {
   const [demensions, setDemensions] = useState<[number, number]>();
   const [cards, setCards] = useState<CardData[]>();
+  const [currClickedCard, setCurrClickedCard] = useState<CardData | null>(null);
   const [prevClickedCard, setPrevClickedCard] = useState<CardData | null>(null);
   const [attemptsCount, setAttemptsCount] = useState<number>(1);
   const [timer, setTimer] = useState<number>(0);
+
+  const processPair = (
+    currClickedCard: CardData,
+    prevClickedCard: CardData
+  ) => {
+    const isPairGuessed =
+      prevClickedCard.id !== currClickedCard.id &&
+      prevClickedCard.imgUrl === currClickedCard.imgUrl;
+
+    if (isPairGuessed) {
+      setCards((prevCards) => {
+        return prevCards?.map((card) => {
+          if (card.id === prevClickedCard.id) {
+            return {
+              ...card,
+              status: 'guessed',
+            };
+          }
+
+          if (card.id === currClickedCard.id) {
+            return {
+              ...card,
+              status: 'guessed',
+            };
+          }
+
+          return card;
+        });
+      });
+    } else {
+      setCards((prevCards) => {
+        return prevCards?.map((card) => {
+          if (card.status === 'shown') {
+            return {
+              ...card,
+              status: 'hidden',
+            };
+          }
+
+          return card;
+        });
+      });
+    }
+
+    setAttemptsCount(attemptsCount + 1);
+
+    setCurrClickedCard(null);
+    setPrevClickedCard(null);
+  };
 
   useEffect(() => {
     if (level === 'easy') {
@@ -91,29 +141,61 @@ const Board = ({ level, onComplete }: BoardProps) => {
     };
   }, []);
 
-  const handleCardClick = (currClickedCard: CardData) => {
-    if (prevClickedCard) {
-      if (
-        prevClickedCard.id !== currClickedCard.id &&
-        prevClickedCard.imgUrl === currClickedCard.imgUrl
-      ) {
-        const newCards = cards!.filter(
-          (card) => card.imgUrl !== currClickedCard.imgUrl
-        );
-
-        if (!newCards.length) {
-          onComplete(attemptsCount, timer);
-          return;
-        } else {
-          setCards(newCards);
-        }
-      }
-      // setAttemptsCount((prev) => prev + 1);
-      setAttemptsCount(attemptsCount + 1);
-      setPrevClickedCard(null);
-    } else {
-      setPrevClickedCard(currClickedCard);
+  useEffect(() => {
+    if (!currClickedCard || !prevClickedCard) {
+      return;
     }
+    const timerId = setTimeout(function () {
+      processPair(currClickedCard, prevClickedCard);
+    }, 1_000);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [currClickedCard, prevClickedCard]);
+
+  useEffect(() => {
+    const isCompletedLevel = cards?.every((card) => card.status === 'guessed');
+
+    if (isCompletedLevel) {
+      onComplete(attemptsCount, timer);
+      return;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
+
+  const handleCardClick = (clickedCard: CardData) => {
+    if (clickedCard.status !== 'hidden') {
+      return;
+    }
+    if (currClickedCard && prevClickedCard) {
+      return;
+    }
+
+    setCards((prevCards) => {
+      return prevCards?.map((card) => {
+        if (card.id === clickedCard.id) {
+          return {
+            ...card,
+            status: 'shown',
+          };
+        }
+
+        return card;
+      });
+    });
+
+    if (currClickedCard) {
+      setPrevClickedCard({
+        ...currClickedCard,
+        status: 'shown',
+      });
+    }
+
+    setCurrClickedCard({
+      ...clickedCard,
+      status: 'shown',
+    });
   };
 
   if (!cards) {
@@ -162,7 +244,6 @@ function Container({ children, cols, rows }: ContainerProps) {
         display: 'inline-grid',
         gap: '10px',
         gridTemplateColumns: sm ? `repeat(${cols}, 1fr)` : `repeat(2, 1fr)`,
-        // gridTemplateRows: `repeat(${rows}, 1fr)`,
         width: '100%',
       }}
     >
@@ -177,17 +258,47 @@ interface CardProps {
   isSelected: boolean;
 }
 
-function Card({ card, onClick, isSelected }: CardProps) {
+function Card({ card, onClick }: CardProps) {
+  if (card.status === 'guessed') {
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: 0,
+          paddingBottom: '100%',
+          boxSizing: 'border-box',
+          backgroundColor: 'transparent',
+        }}
+      />
+    );
+  }
+
+  if (card.status === 'hidden') {
+    return (
+      <div
+        onClick={() => onClick(card)}
+        style={{
+          borderRadius: '8px',
+          width: '100%',
+          height: 0,
+          paddingBottom: '100%',
+          backgroundImage: 'url("/public/images/cover.jpg")',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          boxSizing: 'border-box',
+        }}
+        className="card"
+      />
+    );
+  }
+
   return (
     <div
       onClick={() => onClick(card)}
       style={{
         borderRadius: '8px',
-        outlineColor: isSelected ? 'blue' : 'transparent',
-        outlineStyle: 'solid',
-        outlineWidth: isSelected ? 3 : 0,
         width: '100%',
-        // maxWidth: 200,
         height: 0,
         paddingBottom: '100%',
         backgroundImage: `url(${card.imgUrl})`,
