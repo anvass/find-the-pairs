@@ -235,7 +235,7 @@ interface ContainerProps {
 
 const { useBreakpoint } = Grid;
 
-function Container({ children, cols, rows }: ContainerProps) {
+function Container({ children, cols }: ContainerProps) {
   const { sm } = useBreakpoint();
 
   return (
