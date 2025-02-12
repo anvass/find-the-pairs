@@ -51,7 +51,7 @@ function SceneStart({ onComplete }: SceneStartProps) {
         >
           <Image
             width={'150px'}
-            src="images/logo.svg"
+            src={`${import.meta.env.BASE_URL}/images/logo.svg`}
             alt="Найди пару"
             preview={false}
           />
@@ -223,7 +223,7 @@ function SceneFinal({
 
       <Image
         width={'300px'}
-        src="images/pair.svg"
+        src={`${import.meta.env.BASE_URL}/images/pair.svg`}
         alt="Пара котиков"
         preview={false}
       />

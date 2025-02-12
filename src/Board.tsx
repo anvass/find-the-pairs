@@ -282,7 +282,7 @@ function Card({ card, onClick }: CardProps) {
           width: '100%',
           height: 0,
           paddingBottom: '100%',
-          backgroundImage: 'url("images/cover.jpg")',
+          backgroundImage: `url("${import.meta.env.BASE_URL}/images/cover.jpg")`,
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
