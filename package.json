@@ -1,6 +1,5 @@
 {
   "name": "find-the-pairs",
-  "homepage": ".",
   "private": true,
   "version": "0.0.0",
   "type": "module",
