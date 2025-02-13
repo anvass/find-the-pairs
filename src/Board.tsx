@@ -4,20 +4,24 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { CardData, Level } from './types';
 import Card from './components/Card/Card';
 
-interface CatResponse {
-  url: string;
-}
+const IMAGE_LIMIT = 30;
 
-function fetchCatUrls(limit: number): Promise<string[]> {
-  return fetch(
-    `https://api.thecatapi.com/v1/images/search?api_key=17d94b92-754f-46eb-99a0-65be65b5d18f&limit=${limit}`
-  )
-    .then((res) => res.json())
-    .then((items: CatResponse[]) => items.map((item) => item.url));
+function generateNumbers(size: number): Array<number> {
+  return new Array(size).fill(0).map((_, index) => index + 1);
 }
 
 function shuffle<T>(items: Array<T>) {
   return items.sort(() => -0.5 + Math.random());
+}
+
+function generateUrls(size: number): Array<string> {
+  const randomNumbers = shuffle(generateNumbers(IMAGE_LIMIT)).slice(0, size);
+
+  return twice(
+    randomNumbers.map(
+      (randomNumber) => `${import.meta.env.BASE_URL}/images/${randomNumber}.jpg`
+    )
+  );
 }
 
 function twice<T>(items: Array<T>) {
@@ -32,13 +36,10 @@ function transformUrlToCardData(imgUrl: string, id: number): CardData {
   };
 }
 
-function generateCards(cardAmount: number): Promise<CardData[]> {
+function generateCards(cardAmount: number): Array<CardData> {
   const catsAmount = Math.round(cardAmount / 2);
 
-  return fetchCatUrls(catsAmount)
-    .then(twice)
-    .then(shuffle)
-    .then((urls) => urls.map(transformUrlToCardData));
+  return generateUrls(catsAmount).map(transformUrlToCardData);
 }
 
 interface BoardProps {
@@ -48,10 +49,10 @@ interface BoardProps {
 
 const Board = ({ level, onComplete }: BoardProps) => {
   const [demensions, setDemensions] = useState<[number, number]>();
-  const [cards, setCards] = useState<CardData[]>();
+  const [cards, setCards] = useState<Array<CardData>>();
   const [currClickedCard, setCurrClickedCard] = useState<CardData | null>(null);
   const [prevClickedCard, setPrevClickedCard] = useState<CardData | null>(null);
-  const [attemptsCount, setAttemptsCount] = useState<number>(1);
+  const [attemptsCount, setAttemptsCount] = useState<number>(0);
   const [timer, setTimer] = useState<number>(0);
 
   const processPair = (
@@ -120,7 +121,7 @@ const Board = ({ level, onComplete }: BoardProps) => {
       return;
     }
     const [cols, rows] = demensions;
-    generateCards(cols * rows).then(setCards);
+    setCards(generateCards(cols * rows));
   }, [demensions]);
 
   useEffect(() => {
