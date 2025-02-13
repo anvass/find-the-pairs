@@ -211,7 +211,8 @@ function SceneFinal({
       <Paragraph style={{ margin: '1rem 0' }}>Вы нашли все пары</Paragraph>
 
       <Image
-        width={'300px'}
+        // width={'300px'}
+        style={{ width: '100%', maxWidth: '300px' }}
         src={`${import.meta.env.BASE_URL}/images/pair.svg`}
         alt="Пара котиков"
         preview={false}
