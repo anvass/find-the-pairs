@@ -6,16 +6,14 @@ import {
   Flex,
   Grid,
   Image,
-  Layout,
   Space,
   Table,
   TableColumnsType,
 } from 'antd';
-import { Content, Footer } from 'antd/es/layout/layout';
 import Title from 'antd/es/typography/Title';
 import Paragraph from 'antd/es/typography/Paragraph';
-
-type Level = 'easy' | 'medium' | 'hard';
+import { Level } from './types';
+import { Content } from 'antd/es/layout/layout';
 
 interface SceneStartProps {
   onComplete: (level: Level) => void;
@@ -39,85 +37,75 @@ function SceneStart({ onComplete }: SceneStartProps) {
   const { sm, md } = useBreakpoint();
 
   return (
-    <Layout
-      style={{ textAlign: 'center', minHeight: '100vh', display: 'flex' }}
-    >
-      <Content style={{ display: 'flex', justifyContent: 'center' }}>
-        <Flex
-          vertical
-          justify="center"
-          align="center"
-          style={{ width: '95%', maxWidth: '900px', padding: '30px 15px' }}
+    <Content style={{ display: 'flex', justifyContent: 'center' }}>
+      <Flex
+        vertical
+        justify="center"
+        align="center"
+        style={{ width: '95%', maxWidth: '900px', padding: '30px 15px' }}
+      >
+        <Image
+          width={'150px'}
+          src={`${import.meta.env.BASE_URL}/images/logo.svg`}
+          alt="Найди пару"
+          preview={false}
+        />
+        <Title
+          style={{
+            fontFamily: 'Comfortaa',
+            fontWeight: 700,
+            fontSize: md ? '4.5rem' : '2.5rem',
+          }}
         >
-          <Image
-            width={'150px'}
-            src={`${import.meta.env.BASE_URL}/images/logo.svg`}
-            alt="Найди пару"
-            preview={false}
-          />
-          <Title
-            style={{
-              fontFamily: 'Comfortaa',
-              fontWeight: 700,
-              fontSize: md ? '4.5rem' : '2.5rem',
-            }}
-          >
-            Найди пару
-          </Title>
-          <Paragraph style={{ fontSize: sm ? 'inherit' : '0.9rem' }}>
-            Игра, которая поможет вам улучшить навыки памяти и внимания.
-            <br></br>Вам предстоит запомнить расположение изображений на поле, а
-            затем найти их.
-          </Paragraph>
-          <Divider
-            style={{
-              margin: '3rem 0',
-              fontSize: md ? '1.5rem' : '1.2rem',
-              textWrap: sm ? 'nowrap' : 'wrap',
-            }}
-          >
-            Выберите уровень сложности
-          </Divider>
-          <Flex justify={'center'} align={'center'}>
-            <Space
-              size={'large'}
-              style={{
-                display: 'flex',
-                flexDirection: sm ? 'row' : 'column',
-              }}
-            >
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => onComplete('easy')}
-              >
-                Лёгкий
-              </Button>
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => onComplete('medium')}
-              >
-                Средний
-              </Button>
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => onComplete('hard')}
-              >
-                Сложный
-              </Button>
-            </Space>
-          </Flex>
-        </Flex>
-      </Content>
-
-      <Footer>
-        <Paragraph style={{ fontSize: '0.9rem' }}>
-          &copy; 2025 "Найди пару". Все права защищены.
+          Найди пару
+        </Title>
+        <Paragraph style={{ fontSize: sm ? 'inherit' : '0.9rem' }}>
+          Игра, которая поможет вам улучшить навыки памяти и внимания.
+          <br></br>Вам предстоит запомнить расположение изображений на поле, а
+          затем найти их.
         </Paragraph>
-      </Footer>
-    </Layout>
+        <Divider
+          style={{
+            margin: '3rem 0',
+            fontSize: md ? '1.5rem' : '1.2rem',
+            textWrap: sm ? 'nowrap' : 'wrap',
+          }}
+        >
+          Выберите уровень сложности
+        </Divider>
+        <Flex justify={'center'} align={'center'}>
+          <Space
+            size={'large'}
+            style={{
+              display: 'flex',
+              flexDirection: sm ? 'row' : 'column',
+            }}
+          >
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => onComplete('easy')}
+            >
+              Лёгкий
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => onComplete('medium')}
+            >
+              Средний
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => onComplete('hard')}
+            >
+              Сложный
+            </Button>
+          </Space>
+        </Flex>
+      </Flex>
+    </Content>
   );
 }
 
@@ -205,6 +193,7 @@ function SceneFinal({
         maxWidth: '900px',
         padding: '30px 15px',
         textAlign: 'center',
+        margin: '0 auto',
       }}
     >
       <Title
@@ -275,33 +264,19 @@ const App: React.FC = () => {
 
   if (gameState.scene === 'start') {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+      <SceneStart
+        onComplete={(level) => {
+          setGameState({
+            scene: 'play',
+            level,
+          });
         }}
-      >
-        <SceneStart
-          onComplete={(level) => {
-            setGameState({
-              scene: 'play',
-              level,
-            });
-          }}
-        />
-      </div>
+      />
     );
   }
   if (gameState.scene === 'play') {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
+      <Flex align="center" justify="center">
         <ScenePlay
           level={gameState.level}
           onComplete={(attemptsCount, finalTime) => {
@@ -313,29 +288,21 @@ const App: React.FC = () => {
             });
           }}
         />
-      </div>
+      </Flex>
     );
   }
   if (gameState.scene === 'final') {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+      <SceneFinal
+        attemptsCount={gameState.attemptsCount}
+        finalTime={gameState.finalTime}
+        level={gameState.level}
+        onComplete={() => {
+          setGameState({
+            scene: 'start',
+          });
         }}
-      >
-        <SceneFinal
-          attemptsCount={gameState.attemptsCount}
-          finalTime={gameState.finalTime}
-          level={gameState.level}
-          onComplete={() => {
-            setGameState({
-              scene: 'start',
-            });
-          }}
-        />
-      </div>
+      />
     );
   }
 };
