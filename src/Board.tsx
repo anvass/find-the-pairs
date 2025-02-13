@@ -1,14 +1,8 @@
 import { Flex, Grid, Spin } from 'antd';
 import { ReactElement, useEffect, useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-
-type CardStatus = 'hidden' | 'shown' | 'guessed';
-
-type CardData = {
-  id: number;
-  imgUrl: string;
-  status: CardStatus;
-};
+import { CardData, Level } from './types';
+import Card from './components/Card/Card';
 
 interface CatResponse {
   url: string;
@@ -46,8 +40,6 @@ function generateCards(cardAmount: number): Promise<CardData[]> {
     .then(shuffle)
     .then((urls) => urls.map(transformUrlToCardData));
 }
-
-type Level = 'easy' | 'medium' | 'hard';
 
 interface BoardProps {
   level: Level;
@@ -215,12 +207,7 @@ const Board = ({ level, onComplete }: BoardProps) => {
     <>
       <Container cols={demensions![0]} rows={demensions![1]}>
         {cards.map((card) => (
-          <Card
-            key={card.id}
-            isSelected={card.id === prevClickedCard?.id}
-            card={card}
-            onClick={handleCardClick}
-          />
+          <Card key={card.id} card={card} onClick={handleCardClick} />
         ))}
       </Container>
     </>
@@ -249,66 +236,6 @@ function Container({ children, cols }: ContainerProps) {
     >
       {children}
     </div>
-  );
-}
-
-interface CardProps {
-  card: CardData;
-  onClick: (cardData: CardData) => void;
-  isSelected: boolean;
-}
-
-function Card({ card, onClick }: CardProps) {
-  if (card.status === 'guessed') {
-    return (
-      <div
-        style={{
-          width: '100%',
-          height: 0,
-          paddingBottom: '100%',
-          boxSizing: 'border-box',
-          backgroundColor: 'transparent',
-        }}
-      />
-    );
-  }
-
-  if (card.status === 'hidden') {
-    return (
-      <div
-        onClick={() => onClick(card)}
-        style={{
-          borderRadius: '8px',
-          width: '100%',
-          height: 0,
-          paddingBottom: '100%',
-          backgroundImage: `url("${import.meta.env.BASE_URL}/images/cover.jpg")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-          boxSizing: 'border-box',
-        }}
-        className="card"
-      />
-    );
-  }
-
-  return (
-    <div
-      onClick={() => onClick(card)}
-      style={{
-        borderRadius: '8px',
-        width: '100%',
-        height: 0,
-        paddingBottom: '100%',
-        backgroundImage: `url(${card.imgUrl})`,
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center center',
-        boxSizing: 'border-box',
-      }}
-      className="card"
-    />
   );
 }
 
